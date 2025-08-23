@@ -8,6 +8,11 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
+  <Target Name="BuildReact" BeforeTargets="Build">
+    <Exec WorkingDirectory="FrontEnd" Command="npm install" />
+    <Exec WorkingDirectory="FrontEnd" Command="npm run build" />
+  </Target>
+  
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.2" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.2" />
@@ -26,5 +31,9 @@
     <Content Include="wwwroot\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="FrontEnd\" />
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 </Project>
