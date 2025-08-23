@@ -30,7 +30,8 @@ public class Program
             .With(new Win32PlatformOptions())
             .AfterSetup(_ => CefRuntimeLoader.Initialize(new CefSettings()
                 {
-                    RootCachePath = cachePath,
+                    CachePath = "",
+                    //RootCachePath = cachePath,
                     WindowlessRenderingEnabled = false
                 },
                 customSchemes:

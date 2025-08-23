@@ -20,6 +20,8 @@ public static class InProcessServer
             .ConfigureServices(services =>
             {
                 services.AddSingleton<ITimeService, TimeService>();
+                services.AddSingleton<ITodoStorage, TodoStorage>();
+                
                 services.AddControllers(); 
                 
             })
