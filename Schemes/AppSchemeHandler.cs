@@ -48,9 +48,8 @@ public class AppSchemeResourceHandler(HttpClient client) : CefResourceHandler
         {
             try
             {
-                Uri uri = new Uri(request.Url.Replace("app://", "http://localhost/"));
-
-                HttpResponseMessage response = await client.GetAsync(uri.PathAndQuery, HttpCompletionOption.ResponseContentRead);
+                var requestMessage = request.ToHttpRequestMessage();
+                HttpResponseMessage response = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead);
 
                 byte[] data = await response.Content.ReadAsByteArrayAsync();
 
