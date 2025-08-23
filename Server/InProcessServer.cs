@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using ReactAspNetAvalonia.Services;
 
 namespace ReactAspNetAvalonia.Server;
 
@@ -16,7 +17,12 @@ public static class InProcessServer
         IsRunning = true; // prevent Avalonia from starting
 
         var builder = new WebHostBuilder()
-            .ConfigureServices(services => { services.AddControllers(); })
+            .ConfigureServices(services =>
+            {
+                services.AddSingleton<ITimeService, TimeService>();
+                services.AddControllers(); 
+                
+            })
             .Configure(app =>
             {
                 app.UseRouting();

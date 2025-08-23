@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.TestHost;
 using ReactAspNetAvalonia.Server;
@@ -19,19 +20,14 @@ public class AppSchemeHandler : CefSchemeHandlerFactory
     }
 }
 
-public class AppSchemeResourceHandler : CefResourceHandler
+public class AppSchemeResourceHandler(HttpClient client) : CefResourceHandler
 {
-    private readonly HttpClient _client;
-
-    private Stream? _responseStream;
+    private MemoryStream? _responseStream;
     private int _statusCode = 200;
     private string _mimeType = "application/json";
-    private long _responseLength = 0;
 
-    public AppSchemeResourceHandler(HttpClient client)
-    {
-        _client = client;
-    }
+    // Signal when the async fetch is complete
+    private readonly ManualResetEventSlim _readyEvent = new(false);
 
     protected override bool Open(CefRequest request, out bool handleRequest, CefCallback callback)
     {
@@ -44,7 +40,7 @@ public class AppSchemeResourceHandler : CefResourceHandler
 
         Console.WriteLine($"[Open] URL={request.Url}, handle={handleRequest}");
 
-        // Capture callback immediately
+        // Capture the callback
         CefCallback capturedCallback = callback;
 
         // Start async fetch
@@ -54,35 +50,31 @@ public class AppSchemeResourceHandler : CefResourceHandler
             {
                 Uri uri = new Uri(request.Url.Replace("app://", "http://localhost/"));
 
-                HttpResponseMessage response = await _client.GetAsync(uri.PathAndQuery, HttpCompletionOption.ResponseContentRead);
+                HttpResponseMessage response = await client.GetAsync(uri.PathAndQuery, HttpCompletionOption.ResponseContentRead);
 
-                byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+                byte[] data = await response.Content.ReadAsByteArrayAsync();
 
-                _responseStream = new MemoryStream(bytes, writable: false);
+                _responseStream = new MemoryStream(data, writable: false);
                 _responseStream.Position = 0;
-                _responseLength = _responseStream.Length;
                 _statusCode = (int)response.StatusCode;
                 _mimeType = response.Content.Headers.ContentType?.MediaType ?? "application/json";
 
-                Console.WriteLine($"[FetchAndPrepareAsync] Ready, length={_responseLength}, status={_statusCode}");
-
-                // Continue on UI thread
-                CefRuntime.PostTask(CefThreadId.UI, new CefActionTask(() =>
-                {
-                    capturedCallback.Continue();
-                    capturedCallback.Dispose();
-                }));
+                Console.WriteLine($"[FetchAndPrepareAsync] Ready, length={_responseStream.Length}, status={_statusCode}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[FetchAndPrepareAsync] ERROR: {ex}");
-
                 _responseStream = new MemoryStream(Array.Empty<byte>());
-                _responseLength = 0;
                 _statusCode = 500;
                 _mimeType = "application/json";
+            }
+            finally
+            {
+                // Signal ready for Read/GetResponseHeaders
+                _readyEvent.Set();
 
-                CefRuntime.PostTask(CefThreadId.UI, new CefActionTask(() =>
+                // Tell CEF headers and data are ready
+                CefRuntime.PostTask(CefThreadId.IO, new CefActionTask(() =>
                 {
                     capturedCallback.Continue();
                     capturedCallback.Dispose();
@@ -90,24 +82,20 @@ public class AppSchemeResourceHandler : CefResourceHandler
             }
         });
 
-        return true; // async, will call Continue() later
+        return true; // async
     }
 
     protected override void GetResponseHeaders(CefResponse response, out long responseLength, out string redirectUrl)
     {
         redirectUrl = string.Empty;
 
+        // Wait until fetch is complete
+        _readyEvent.Wait();
+
         response.Status = _statusCode;
         response.MimeType = _mimeType;
 
-        if (_responseStream != null)
-        {
-            responseLength = _responseLength;
-        }
-        else
-        {
-            responseLength = -1; // unknown length; CEF will call Read until EOF
-        }
+        responseLength = _responseStream?.Length ?? -1;
 
         // CORS headers
         response.SetHeaderByName("Access-Control-Allow-Origin", "*", false);
@@ -136,7 +124,7 @@ public class AppSchemeResourceHandler : CefResourceHandler
                 return true;
             }
 
-            // Non-seekable: read and discard
+            // Non-seekable fallback
             const int chunk = 32 * 1024;
             long remaining = bytesToSkip;
             byte[] buffer = new byte[chunk];
@@ -166,21 +154,13 @@ public class AppSchemeResourceHandler : CefResourceHandler
     {
         bytesRead = 0;
 
+        // Wait until the response is ready
+        _readyEvent.Wait();
+
         if (_responseStream == null)
         {
-            // Wait briefly for async fetch to complete
-            int waitMs = 0;
-            while (_responseStream == null && waitMs < 1000) // max 1 second
-            {
-                Task.Delay(5).Wait();
-                waitMs += 5;
-            }
-
-            if (_responseStream == null)
-            {
-                Console.WriteLine("[Read] Stream still not ready, returning false");
-                return false;
-            }
+            Console.WriteLine("[Read] No stream available");
+            return false;
         }
 
         byte[] buffer = new byte[bytesToRead];
@@ -192,7 +172,7 @@ public class AppSchemeResourceHandler : CefResourceHandler
             return true;
         }
 
-        return false;
+        return false; // EOF
     }
 
     protected override void Cancel()
@@ -203,6 +183,7 @@ public class AppSchemeResourceHandler : CefResourceHandler
             _responseStream = null;
         }
 
+        _readyEvent.Set();
         Console.WriteLine("[Cancel] Called");
     }
 }
