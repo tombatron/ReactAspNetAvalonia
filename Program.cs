@@ -2,17 +2,25 @@
 using System;
 using System.IO;
 using ReactAspNetAvalonia.Schemes;
+using ReactAspNetAvalonia.Server;
 using Xilium.CefGlue;
 using Xilium.CefGlue.Common;
 
 namespace ReactAspNetAvalonia;
 
-class Program
+public class Program
 {
     [STAThread]
-    public static void Main(string[] args) => BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
-    
+    public static void Main(string[] args)
+    {
+        if (InProcessServer.IsRunning)
+        {
+            return;
+        }
+        
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
+
     private static AppBuilder BuildAvaloniaApp()
     {
         var cachePath = Path.Combine(Path.GetTempPath(), "CefGlue_" + Guid.NewGuid().ToString().Replace("-", null));

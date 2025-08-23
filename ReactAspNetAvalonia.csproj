@@ -19,6 +19,8 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CefGlue.Avalonia" Version="120.6099.211" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.8" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\**\*.*">
