@@ -9,7 +9,7 @@ public class AppApiSchemeHandler : CefSchemeHandlerFactory
 {
     protected override CefResourceHandler Create(CefBrowser browser, CefFrame frame, string schemeName, CefRequest request)
     {
-        Console.WriteLine($"[AppSchemeHandler] Creating handler for {request.Url}");
+        Console.WriteLine($"[AppApiSchemeHandler] Creating handler for {request.Url}");
         return new AppApiSchemeResourceHandler(InProcessServer.GetClient());
     }
 }

@@ -25,7 +25,7 @@ public class Program
 
     private static AppBuilder BuildAvaloniaApp()
     {
-        var cachePath = Path.Combine(Path.GetTempPath(), "CefGlue_" + Guid.NewGuid().ToString().Replace("-", null));
+        var cachePath = Path.Combine(Path.GetTempPath(), $"CefGlue_{Guid.NewGuid():N}");
 
         return AppBuilder.Configure<App>()
             .UsePlatformDetect()
@@ -37,7 +37,8 @@ public class Program
                 },
                 customSchemes:
                 [
-                    new AppApiScheme()
+                    new AppApiScheme(),
+                    new AppEventScheme()
                 ]));
     }
 }

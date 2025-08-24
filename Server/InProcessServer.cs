@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using ReactAspNetAvalonia.EventHubs;
 using ReactAspNetAvalonia.Services;
 
 namespace ReactAspNetAvalonia.Server;
@@ -34,7 +35,12 @@ public static class InProcessServer
             .Configure(app =>
             {
                 app.UseRouting();
-                app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+                
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllers();
+                    endpoints.MapHub<AppEventHub>("/events");
+                });
             });
 
         _server = new TestServer(builder);
