@@ -1,34 +1,45 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-  </PropertyGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.3.2" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.2" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" />
-    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.2">
-      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
-      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="CefGlue.Avalonia" Version="120.6099.211" />
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.8" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="wwwroot\**\*.*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="FrontEnd\" />
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    </PropertyGroup>
+
+    <Target Name="RunNpmBuild" BeforeTargets="CoreCompile">
+        <Message Text=">>> Running npm build..." Importance="high" />
+        <Exec WorkingDirectory="frontend" Command="npm install" />
+        <Exec WorkingDirectory="frontend" Command="npm run build" />
+        <CreateItem Include="wwwroot\**\*">
+            <Output TaskParameter="Include" ItemName="Content" />
+        </CreateItem>
+    </Target>
+
+
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.2"/>
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.2"/>
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2"/>
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2"/>
+        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.2">
+            <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+            <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="CefGlue.Avalonia" Version="120.6099.211"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.8"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="wwwroot\**\*.*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="FrontEnd\"/>
+        <Folder Include="wwwroot\"/>
+    </ItemGroup>
 </Project>
