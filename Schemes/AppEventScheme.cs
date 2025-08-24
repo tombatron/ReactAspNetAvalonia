@@ -7,6 +7,7 @@ public class AppEventScheme : CustomScheme
     public AppEventScheme()
     {
         SchemeName = "app";
+        DomainName = "events";
         IsStandard = true;
         IsLocal = true;
         IsCorsEnabled = true;

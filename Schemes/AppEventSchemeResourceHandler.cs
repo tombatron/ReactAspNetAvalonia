@@ -26,8 +26,20 @@ public class AppEventSchemeResourceHandler(HttpClient client) : CefResourceHandl
         {
             return false;
         }
+        
+        if (request.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine($"[OPTIONS] {request.Url}");
+            // CORS preflight: respond immediately
+            _responseStream = new MemoryStream([]);
+            _statusCode = 200;
+            _mimeType = "text/plain";
+            _readyEvent.Set();
+            callback.Continue();
+            return true;
+        }
 
-        Console.WriteLine($"[Open] URL={request.Url}, handle={handleRequest}");
+        Console.WriteLine($"[Open] URL={request.Url}, handle={handleRequest}, method={request.Method}");
 
         // Capture the callback
         CefCallback capturedCallback = callback;
@@ -38,14 +50,23 @@ public class AppEventSchemeResourceHandler(HttpClient client) : CefResourceHandl
             try
             {
                 var requestMessage = request.ToHttpRequestMessage();
+
                 HttpResponseMessage response = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
 
                 _responseStream = await response.Content.ReadAsStreamAsync();
-                _responseStream.Position = 0;
                 _statusCode = (int)response.StatusCode;
-                _mimeType = response.Content.Headers.ContentType?.MediaType ?? "text/event-stream";
 
-                Console.WriteLine($"[FetchAndPrepareAsync] Ready, length={_responseStream.Length}, status={_statusCode}");
+                if (requestMessage.RequestUri!.PathAndQuery.Contains("negotiate"))
+                {
+                    _mimeType = "application/json";
+                }
+                else
+                {
+                    _mimeType = response.Content.Headers.ContentType?.MediaType ?? "text/event-stream";    
+                }
+                
+
+                Console.WriteLine($"[FetchAndPrepareAsync] Ready, status={_statusCode}");
             }
             catch (Exception ex)
             {
@@ -82,11 +103,19 @@ public class AppEventSchemeResourceHandler(HttpClient client) : CefResourceHandl
         response.MimeType = _mimeType;
 
         responseLength = UnknownLength;
+        
+        // CORS headers for SignalR negotiate + SSE
+        response.SetHeaderByName("Access-Control-Allow-Origin", "null", false); 
+        response.SetHeaderByName("Access-Control-Allow-Credentials", "true", false);
+        response.SetHeaderByName("Access-Control-Allow-Methods", "GET, POST, OPTIONS", false);
+        response.SetHeaderByName("Access-Control-Allow-Headers", "Content-Type", false);
 
-        // CORS headers
-        response.SetHeaderByName("Access-Control-Allow-Origin", "*", false);
-        response.SetHeaderByName("Cache-Control", "no-cache", false);
-        response.SetHeaderByName("Connection", "keep-alive", false);
+        // SSE specific headers
+        if (_mimeType == "text/event-stream")
+        {
+            response.SetHeaderByName("Cache-Control", "no-cache", false);
+            response.SetHeaderByName("Connection", "keep-alive", false);
+        }
 
         Console.WriteLine($"[GetResponseHeaders] Status={response.Status}, MimeType={response.MimeType}, Length={responseLength}");
     }
@@ -139,24 +168,19 @@ public class AppEventSchemeResourceHandler(HttpClient client) : CefResourceHandl
     protected override bool Read(Stream response, int bytesToRead, out int bytesRead, CefResourceReadCallback callback)
     {
         bytesRead = 0;
-
-        // Wait until the response is ready
         _readyEvent.Wait();
 
         if (_responseStream == null)
-        {
-            Console.WriteLine("[Read] No stream available");
             return false;
-        }
 
         try
         {
             byte[] buffer = new byte[bytesToRead];
-            int read  = _responseStream.Read(buffer, 0, bytesToRead);
+            int read = _responseStream.Read(buffer, 0, bytesToRead);
 
-            if (bytesRead > 0)
+            if (read > 0)
             {
-                response.Write(buffer, 0, bytesRead);
+                response.Write(buffer, 0, read);
                 bytesRead = read;
                 return true;
             }
@@ -169,7 +193,7 @@ public class AppEventSchemeResourceHandler(HttpClient client) : CefResourceHandl
             return false;
         }
     }
-
+    
     protected override void Cancel()
     {
         _responseStream?.Dispose();

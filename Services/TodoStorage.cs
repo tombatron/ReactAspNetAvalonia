@@ -2,20 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
+using ReactAspNetAvalonia.EventHubs;
 
 namespace ReactAspNetAvalonia.Services;
 
-public class TodoStorage : ITodoStorage
+public class TodoStorage(IHubContext<TodoStatusesHub> statusHubContext) : ITodoStorage
 {
     private int _id = 0;
     private readonly ConcurrentDictionary<int, Todo> _store = new();
     
-    public Task<List<Todo>> GetAll()
+    public async Task<List<Todo>> GetAll()
     {
-        return Task.FromResult(_store.Values.ToList());
+        await statusHubContext.Clients.All.SendAsync("ReceiveStatus", "Returning all messages.");
+        
+        return _store.Values.ToList();
     }
 
-    public Task<Todo> Insert(Todo todo)
+    public async Task<Todo> Insert(Todo todo)
     {
         var newTodo = todo with
         {
@@ -23,23 +27,25 @@ public class TodoStorage : ITodoStorage
         };
 
         _store[newTodo.Id] = newTodo;
+        
+        await statusHubContext.Clients.All.SendAsync("ReceiveStatus", $"Inserted Todo #{newTodo.Id}");
 
-        return Task.FromResult(newTodo);
+        return newTodo;
     }
 
-    public Task Update(Todo todo)
+    public async Task Update(Todo todo)
     {
-        Delete(todo.Id);
+        await Delete(todo.Id);
 
         _store[todo.Id] = todo;
         
-        return Task.CompletedTask;
+        await statusHubContext.Clients.All.SendAsync("ReceiveStatus", $"Updated Todo #{todo.Id}.");
     }
 
-    public Task Delete(int id)
+    public async Task Delete(int id)
     {
         _store.Remove(id, out _);
         
-        return Task.CompletedTask;
+        await statusHubContext.Clients.All.SendAsync("ReceiveStatus", $"Deleted Todo #{id}");
     }
 }

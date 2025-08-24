@@ -23,9 +23,11 @@ public static class CefRequestExtensions
         HttpMethod method = new HttpMethod(cefRequest.Method.ToUpperInvariant());
 
         // Convert app:// URL to dummy http://localhost/ for in-process HttpClient
-        var uriString = cefRequest.Url.Replace("app://", $"http://{Guid.NewGuid():n}/");
-        Uri uri = new Uri(uriString);
-
+        // var uriString = cefRequest.Url.Replace("app://", $"http://{Guid.NewGuid():n}/");
+        // Uri uri = new Uri(uriString);
+        var cefUri = new Uri(cefRequest.Url);
+        var uri = new Uri(cefUri.PathAndQuery, UriKind.Relative);
+        
         var requestMessage = new HttpRequestMessage(method, uri);
 
         // Copy headers from CefRequest

@@ -1,7 +1,8 @@
-﻿import React, { useEffect, useState } from "react";
-import { Todo } from "../types/todo";
-import { fetchTodos, addTodo, toggleTodo, deleteTodo } from "../api/todos";
-import { TodoItem } from "./TodoItem";
+﻿import React, {useEffect, useState} from "react";
+import {Todo} from "../types/todo";
+import {fetchTodos, addTodo, toggleTodo, deleteTodo} from "../api/todos";
+import {TodoItem} from "./TodoItem";
+import TodoStatusMessages from "./TodoStatusMessages";
 
 export const TodoList: React.FC = () => {
     const [todos, setTodos] = useState<Todo[]>([]);
@@ -44,35 +45,41 @@ export const TodoList: React.FC = () => {
     };
 
     return (
-        <div className="todo-list">
-            <h1>Todo List</h1>
+        <>
+            <div className="todo-list">
+                <h1>Todo List</h1>
 
-            <div className="controls">
-                <div className="add-todo">
-                    <input
-                        type="text"
-                        value={newTitle}
-                        onChange={e => setNewTitle(e.target.value)}
-                        placeholder="New task"
-                    />
-                    <button onClick={handleAdd}>Add</button>
+                <div className="controls">
+                    <div className="add-todo">
+                        <input
+                            type="text"
+                            value={newTitle}
+                            onChange={e => setNewTitle(e.target.value)}
+                            placeholder="New task"
+                        />
+                        <button onClick={handleAdd}>Add</button>
+                    </div>
+
+                    <button onClick={loadTodos} disabled={loading}>
+                        {loading ? "Refreshing..." : "Refresh"}
+                    </button>
                 </div>
 
-                <button onClick={loadTodos} disabled={loading}>
-                    {loading ? "Refreshing..." : "Refresh"}
-                </button>
+                <ul>
+                    {todos.map(todo => (
+                        <TodoItem
+                            key={todo.id}
+                            todo={todo}
+                            onToggle={handleToggle}
+                            onDelete={handleDelete}
+                        />
+                    ))}
+                </ul>
             </div>
-
-            <ul>
-                {todos.map(todo => (
-                    <TodoItem
-                        key={todo.id}
-                        todo={todo}
-                        onToggle={handleToggle}
-                        onDelete={handleDelete}
-                    />
-                ))}
-            </ul>
-        </div>
+            <div>
+                <h2>Status Messages</h2>
+                <TodoStatusMessages />
+            </div>
+        </>
     );
 };

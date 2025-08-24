@@ -30,7 +30,7 @@ public static class InProcessServer
                 services.AddSingleton<ITodoStorage, TodoStorage>();
                 
                 services.AddControllers(); 
-                
+                services.AddSignalR();
             })
             .Configure(app =>
             {
@@ -39,7 +39,8 @@ public static class InProcessServer
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
-                    endpoints.MapHub<AppEventHub>("/events");
+                    endpoints.MapHub<DemoEventHub>("/demo");
+                    endpoints.MapHub<TodoStatusesHub>("/todoStatuses");
                 });
             });
 
