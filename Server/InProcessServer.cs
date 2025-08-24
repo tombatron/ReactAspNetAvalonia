@@ -1,8 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using ReactAspNetAvalonia.Services;
 
@@ -10,10 +9,17 @@ namespace ReactAspNetAvalonia.Server;
 
 public static class InProcessServer
 {
-    public static bool IsRunning { get; set; } = false;
+    private static TestServer? _server;
+    private static HttpClient? _client;
+    public static bool IsRunning { get; private set; }
 
-    public static IWebHostBuilder CreateHost()
+    public static void Start()
     {
+        if (_server is not null)
+        {
+            return;
+        }
+        
         IsRunning = true; // prevent Avalonia from starting
 
         var builder = new WebHostBuilder()
@@ -31,6 +37,17 @@ public static class InProcessServer
                 app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
             });
 
-        return builder;
+        _server = new TestServer(builder);
+        _client = _server.CreateClient();
+    }
+
+    public static HttpClient GetClient()
+    {
+        if (_client is null)
+        {
+            Start();
+        }
+
+        return _client!;
     }
 }

@@ -18,6 +18,8 @@ public class Program
             return;
         }
         
+        InProcessServer.Start();
+        
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
