@@ -8,10 +8,14 @@ namespace ReactAspNetAvalonia.Controls;
 public partial class BrowserView : UserControl
 {
     private AvaloniaCefBrowser _browser;
-    
-    public BrowserView()
+
+    public BrowserView() : this("index")
     {
-        var entryFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "index.html");
+    }
+
+    public BrowserView(string entryFileName)
+    {
+        var entryFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", $"{entryFileName}.html");
         var entryFileUri = new Uri(entryFile);
         
         InitializeComponent();

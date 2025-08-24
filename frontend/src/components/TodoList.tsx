@@ -3,6 +3,7 @@ import {Todo} from "../types/todo";
 import {fetchTodos, addTodo, toggleTodo, deleteTodo} from "../api/todos";
 import {TodoItem} from "./TodoItem";
 import TodoStatusMessages from "./TodoStatusMessages";
+import {LocalLink} from "./LocalLink";
 
 export const TodoList: React.FC = () => {
     const [todos, setTodos] = useState<Todo[]>([]);
@@ -77,8 +78,7 @@ export const TodoList: React.FC = () => {
                 </ul>
             </div>
             <div>
-                <h2>Status Messages</h2>
-                <TodoStatusMessages />
+                <LocalLink fileName={"sample"} text={"Click here for status messages."} />
             </div>
         </>
     );
