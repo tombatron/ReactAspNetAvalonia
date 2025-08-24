@@ -37,7 +37,7 @@ public class AppApiSchemeResourceHandler(HttpClient client) : CefResourceHandler
             try
             {
                 var requestMessage = request.ToHttpRequestMessage();
-                HttpResponseMessage response = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead);
+                HttpResponseMessage response = await client.SendAsync(requestMessage);
 
                 byte[] data = await response.Content.ReadAsByteArrayAsync();
 
