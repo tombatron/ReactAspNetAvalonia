@@ -1,11 +1,11 @@
 ﻿import React from 'react';
 
 export interface ILocalLinkProps {
-    fileName: string;
+    viewName: string;
     text: string;
 }
 
-export const LocalLink: React.FC<ILocalLinkProps> = ({ fileName, text }) => {
+export const LocalLink: React.FC<ILocalLinkProps> = ({ viewName, text }) => {
     const handleClick = async (e: React.MouseEvent) => {
         e.preventDefault(); // stop <a> from navigating
 
@@ -15,7 +15,7 @@ export const LocalLink: React.FC<ILocalLinkProps> = ({ fileName, text }) => {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({"FileName": fileName})
+                body: JSON.stringify({"ViewName": viewName})
             });
 
             if (!response.ok) console.error("Failed to open new window", response.statusText);

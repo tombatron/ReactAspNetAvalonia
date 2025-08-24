@@ -13,17 +13,27 @@ public partial class BrowserView : UserControl
     {
     }
 
-    public BrowserView(string entryFileName)
+    public BrowserView(string entryView)
     {
-        var entryFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", $"{entryFileName}.html");
-        var entryFileUri = new Uri(entryFile);
-        
         InitializeComponent();
-        
+
         var browserWrapper = this.FindControl<Decorator>("BrowserWrapper");
-        
-        _browser = new AvaloniaCefBrowser();
-        _browser.Address = entryFileUri.AbsoluteUri;
+
+        var entryFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "index.html");
+
+        // Create a proper file:// URI
+        var fileUri = new Uri(entryFile);
+
+        // Use UriBuilder to append the query string
+        var uriBuilder = new UriBuilder(fileUri)
+        {
+            Query = $"viewName={Uri.EscapeDataString(entryView)}"
+        };
+
+        _browser = new AvaloniaCefBrowser
+        {
+            Address = uriBuilder.Uri.AbsoluteUri
+        };
 
         browserWrapper!.Child = _browser;
     }

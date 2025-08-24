@@ -78,7 +78,7 @@ export const TodoList: React.FC = () => {
                 </ul>
             </div>
             <div>
-                <LocalLink fileName={"sample"} text={"Click here for status messages."} />
+                <LocalLink viewName={"sample"} text={"Click here for status messages."} />
             </div>
         </>
     );
