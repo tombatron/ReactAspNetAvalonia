@@ -8,7 +8,7 @@ using Xilium.CefGlue;
 
 namespace ReactAspNetAvalonia.Schemes;
 
-public class AppSchemeResourceHandler(HttpClient client) : CefResourceHandler
+public class AppApiSchemeResourceHandler(HttpClient client) : CefResourceHandler
 {
     private MemoryStream? _responseStream;
     private int _statusCode = 200;

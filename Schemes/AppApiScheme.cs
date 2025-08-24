@@ -2,9 +2,9 @@
 
 namespace ReactAspNetAvalonia.Schemes;
 
-public class AppScheme : CustomScheme
+public class AppApiScheme : CustomScheme
 {
-    public AppScheme()
+    public AppApiScheme()
     {
         SchemeName = "app";
         IsStandard = true;
@@ -12,6 +12,6 @@ public class AppScheme : CustomScheme
         IsCorsEnabled = true;
         IsCSPBypassing = true;
         IsFetchEnabled = true;
-        SchemeHandlerFactory = new AppSchemeHandler();
+        SchemeHandlerFactory = new AppApiSchemeHandler();
     }
 }
